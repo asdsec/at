@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:at/help.dart';
@@ -9,34 +8,42 @@ void check(List<String> flags) {
     return;
   }
   final flag = flags.first;
+  final username = flags[1];
   return switch (flag) {
-    'header' => _header(),
+    'header' => _header(username),
     'help' => help(),
     _ => print('error: unknown flag'),
   };
 }
 
-void _header() {
+List<File> _findFiles() {
   final dir = Directory.current;
-  final files = <String>['${dir.path}\\at.c'];
+  return dir
+      .listSync(
+        recursive: true,
+      )
+      .whereType<File>()
+      .where(
+        (file) => file.path.endsWith('.c') || file.path.endsWith('.h'),
+      )
+      .toList();
+}
+
+bool _isValid({
+  required File file,
+  required String username,
+}) {
+  final lines = file.readAsLinesSync();
+  final name1 = lines[5].substring(9, 9 + username.length);
+  final name2 = lines[7].substring(37, 37 + username.length);
+  final name3 = lines[8].substring(37, 37 + username.length);
+  return name1 == username && name2 == username && name3 == username;
+}
+
+void _header(String username) {
+  final files = _findFiles();
   // ignore: cascade_invocations
-  for (final file in files) {
-    final f = File(file);
-    final lines = f.readAsLinesSync();
-    final line = lines[5];
-    var name = line.substring(9);
-    var i = 0;
-    while (name[i] != ' ') {
-      i++;
-    }
-    name = name.substring(0, i);
-    final n1 = lines[7].substring(37, 37 + i);
-    final n2 = lines[8].substring(37, 37 + i);
-    if (n1 != name || n2 != name) {
-      print('error: header name mismatch');
-      return;
-    } else {
-      print('valid header');
-    }
-  }
+  files.any((file) => _isValid(file: file, username: username) == false)
+      ? print('error: invalid header')
+      : print('valid header');
 }
