@@ -4,6 +4,8 @@ AT is a command line tool designed specifically for use within 42 schools. It st
 
 ## Getting Started
 
+##Fork
+
 ### Usage
 
 Example:
